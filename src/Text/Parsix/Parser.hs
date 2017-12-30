@@ -122,7 +122,7 @@ instance Parsing Parser where
 instance CharParsing Parser where
   satisfy f = Parser
     $ \_s0 s e0 _e pos inp ->
-      if Text.length inp > 0 then
+      if codePoints pos < Unsafe.lengthWord16 inp then
         case Unsafe.iter inp $ codePoints pos of
           Unsafe.Iter c delta
             | f c -> s c mempty $ next c delta pos
