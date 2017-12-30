@@ -136,39 +136,6 @@ instance LookAheadParsing Parser where
   lookAhead (Parser p) = Parser
     $ \s0 s e0 e pos -> p s0 (\a _ _ -> s a mempty pos) e0 e pos
 
-withRecovery :: Parser a -> (ErrorInfo -> Parser a) -> Parser a
-withRecovery (Parser p) recover = Parser
-  $ \s0 s e0 e pos inp -> p
-    s0
-    s
-    e0
-    (\err pos' -> unParser (recover err)
-      (\a err' -> s a (err <> err') pos')
-      s
-      (\err' -> e (err <> err') pos')
-      e
-      pos'
-      inp)
-    pos
-    inp
-
-position :: Parser Position
-position = Parser $ \s0 _s _e0 _e pos _inp -> s0 pos mempty
-
-input :: Parser Text
-input = Parser $ \s0 _s _e0 _e _pos inp -> s0 inp mempty
-
-slicedWith :: (a -> Text -> b) -> Parser a -> Parser b
-slicedWith f p = do
-  i <- position
-  a <- p
-  j <- position
-  inp <- input
-  return
-    $ f a
-    $ Unsafe.takeWord16 (codePoints j - codePoints i)
-    $ Unsafe.dropWord16 (codePoints i) inp
-
 parseFromFile :: MonadIO m => Parser a -> String -> m (Maybe a)
 parseFromFile p file = do
   result <- parseFromFileEx p file

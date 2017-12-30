@@ -16,13 +16,15 @@ cabal-version:       >=1.10
 library
   hs-source-dirs:      src
   exposed-modules:     Text.Parsix.Parser,
+                       Text.Parsix.Combinators,
                        Text.Parsix.Position,
                        Text.Parsix.Result
   build-depends:       base >= 4.7 && < 5,
                        bytestring,
                        containers,
                        parsers,
-                       text
+                       text,
+                       transformers
   default-language:    Haskell2010
   ghc-options:         -Wall
                        -funbox-strict-fields
