@@ -15,7 +15,8 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Text.Parsix.Parser,
+  exposed-modules:     Text.Parsix
+                       Text.Parsix.Parser,
                        Text.Parsix.Combinators,
                        Text.Parsix.Position,
                        Text.Parsix.Result
