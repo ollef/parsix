@@ -150,8 +150,8 @@ parseFromFileEx p file = do
   s <- liftIO $ Text.readFile file
   return $ parseText p s $ Just file
 
--- | @parseByteString p i mfile@ runs a parser @p@ on @i@. @mfile@ is used
--- for reporting errors.
+-- | @parseText p i mfile@ runs a parser @p@ on @i@. @mfile@ is used for
+-- reporting errors.
 parseText :: Parser a -> Text -> Maybe FilePath -> Result a
 parseText (Parser p) inp mfile = p
   (\res _ -> Success res)
