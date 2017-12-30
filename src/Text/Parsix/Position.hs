@@ -1,13 +1,12 @@
 {-# LANGUAGE BangPatterns, OverloadedStrings #-}
 module Text.Parsix.Position where
 
-import qualified Data.ByteString as BS
-import Data.ByteString(ByteString)
-import qualified Data.ByteString.UTF8 as UTF8
-import Data.Char
+import Data.Monoid
+import Data.Text(Text)
+import qualified Data.Text as Text
 
 data Position = Position
-  { bytes :: !Int
+  { codePoints :: !Int
   , visualRow :: !Int
   , visualColumn :: !Int
   } deriving (Eq, Ord, Show)
@@ -17,7 +16,7 @@ start = Position 0 0 0
 
 next :: Char -> Int -> Position -> Position
 next !c !delta !pos = Position
-  { bytes = bytes pos + delta
+  { codePoints = codePoints pos + delta
   , visualRow = row'
   , visualColumn = col'
   }
@@ -29,13 +28,13 @@ next !c !delta !pos = Position
       '\t' -> (row, col + 8 - mod col 8)
       _ -> (row, col + 1)
 
-positionRow :: Position -> ByteString -> ByteString
+positionRow :: Position -> Text -> Text
 positionRow pos bs = rows bs !! visualRow pos
   where
-    rows :: ByteString -> [ByteString]
-    rows = BS.split $ fromIntegral $ ord '\n'
+    rows :: Text -> [Text]
+    rows = Text.splitOn "\n"
 
-showPosition :: Position -> ByteString -> String
-showPosition pos bs
-  = UTF8.toString (positionRow pos bs) ++ "\n"
-  ++ replicate (visualColumn pos) ' ' ++ "^"
+showPosition :: Position -> Text -> Text
+showPosition pos inp
+  = positionRow pos inp <> "\n"
+  <> Text.replicate (visualColumn pos) " " <> "^"

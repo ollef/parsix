@@ -1,10 +1,9 @@
-{-# LANGUAGE DeriveFunctor, DeriveFoldable, DeriveTraversable #-}
+{-# LANGUAGE DeriveFunctor, DeriveFoldable, DeriveTraversable, OverloadedStrings #-}
 module Text.Parsix.Result where
 
 import Control.Applicative
-import Data.ByteString(ByteString)
-import Data.List
-import Data.Maybe
+import Data.Text(Text)
+import qualified Data.Text as Text
 import Data.Semigroup
 import qualified Data.Set as Set
 import Data.Set(Set)
@@ -12,19 +11,19 @@ import Data.Set(Set)
 import Text.Parsix.Position
 
 data ErrorInfo = ErrorInfo
-  { errorReason :: Maybe String
-  , errorExpected :: Set String
+  { errorReason :: Maybe Text
+  , errorExpected :: Set Text
   } deriving (Eq, Ord, Show)
 
-showErrorInfo :: ErrorInfo -> String
+showErrorInfo :: ErrorInfo -> Text
 showErrorInfo (ErrorInfo Nothing expected)
   | Set.null expected = ""
-  | otherwise = "expected: " ++ intercalate ", " (Set.toList expected)
+  | otherwise = "expected: " <> Text.intercalate ", " (Set.toList expected)
 showErrorInfo (ErrorInfo (Just reason) expected)
   | Set.null expected = reason
-  | otherwise = reason ++ ",\nexpected: " ++ intercalate ", " (Set.toList expected)
+  | otherwise = reason <> ",\nexpected: " <> Text.intercalate ", " (Set.toList expected)
 
-failed :: String -> ErrorInfo
+failed :: Text -> ErrorInfo
 failed x = ErrorInfo (Just x) mempty
 
 instance Monoid ErrorInfo where
@@ -39,7 +38,7 @@ data Result a
   | Failure [Error]
   deriving (Eq, Ord, Show, Functor, Foldable, Traversable)
 
-data Error = Error !ErrorInfo !Position !ByteString !(Maybe FilePath)
+data Error = Error !ErrorInfo !Position !Text !(Maybe FilePath)
   deriving (Eq, Ord, Show)
 
 instance Applicative Result where
@@ -57,11 +56,13 @@ instance Alternative Result where
   s@Success {} <|> _ = s
   _ <|> s@Success {} = s
 
-showError :: Error -> String
+showError :: Error -> Text
 showError (Error info pos bs mfile)
-  = fromMaybe "(interactive)" mfile
-  ++ ":" ++ show (visualRow pos + 1)
-  ++ ":" ++ show (visualColumn pos + 1)
-  ++ ": " ++ showErrorInfo info
-  ++ "\n"
-  ++ showPosition pos bs
+  = maybe "(interactive)" Text.pack mfile
+  <> ":" <> shower (visualRow pos + 1)
+  <> ":" <> shower (visualColumn pos + 1)
+  <> ": " <> showErrorInfo info
+  <> "\n"
+  <> showPosition pos bs
+    where
+      shower = Text.pack . show

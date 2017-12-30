@@ -1,15 +1,16 @@
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE OverloadedStrings, RankNTypes #-}
 module Text.Parsix.Parser where
 
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Fail
 import Control.Monad.IO.Class
-import qualified Data.ByteString as BS
-import Data.ByteString(ByteString)
-import qualified Data.ByteString.UTF8 as UTF8
 import Data.Semigroup
 import qualified Data.Set as Set
+import Data.Text(Text)
+import qualified Data.Text as Text
+import qualified Data.Text.IO as Text
+import qualified Data.Text.Unsafe as Unsafe
 import Text.Parser.Char
 import Text.Parser.Combinators
 import Text.Parser.LookAhead
@@ -25,8 +26,8 @@ newtype Parser a = Parser
     -> (a -> ErrorInfo -> Position -> r) -- success committed
     -> (ErrorInfo -> r) -- error epsilon
     -> (ErrorInfo -> Position -> r) -- error committed
-    -> Position
-    -> ByteString
+    -> Position -- Input position
+    -> Text -- Input
     -> r
   }
 
@@ -34,48 +35,48 @@ instance Functor Parser where
   fmap f (Parser p) = Parser $ \s0 s e0 e -> p (s0 . f) (s . f) e0 e
 
 instance Applicative Parser where
-  pure a = Parser $ \s0 _s _e0 _e _pos _bs -> s0 a mempty
+  pure a = Parser $ \s0 _s _e0 _e _pos _inp -> s0 a mempty
   (<*>) = ap
 
 instance Alternative Parser where
-  empty = Parser $ \_s0 _s e0 _e _pos _bs -> e0 mempty
+  empty = Parser $ \_s0 _s e0 _e _pos _inp -> e0 mempty
   Parser p <|> Parser q = Parser
-    $ \s0 s e0 e pos bs -> p
+    $ \s0 s e0 e pos inp -> p
       s0
       s
-      (\err -> q s0 s (\err' -> e0 $ err <> err') e pos bs)
+      (\err -> q s0 s (\err' -> e0 $ err <> err') e pos inp)
       e
       pos
-      bs
+      inp
   many p = reverse <$> manyAccum (:) p
   some p = (:) <$> p <*> many p
 
 instance Monad Parser where
   return = pure
   Parser p >>= f = Parser
-    $ \s0 s e0 e pos bs -> p
+    $ \s0 s e0 e pos inp -> p
       (\a err -> unParser (f a)
         (\b err' -> s0 b $ err <> err')
         s
         (\err' -> e0 $ err <> err')
         e
         pos
-        bs)
+        inp)
       (\a err pos' -> unParser (f a)
         (\b err' -> s b (err <> err') pos')
         s
         (\err' -> e (err <> err') pos')
         e
         pos'
-        bs)
+        inp)
       e0
       e
       pos
-      bs
+      inp
 
 instance MonadFail Parser where
   fail x = Parser
-    $ \_s0 _s e0 _e _pos _bs -> e0 $ failed x
+    $ \_s0 _s e0 _e _pos _inp -> e0 $ failed $ Text.pack x
 
 instance MonadPlus Parser where
   mzero = empty
@@ -83,7 +84,7 @@ instance MonadPlus Parser where
 
 manyAccum :: (a -> [a] -> [a]) -> Parser a -> Parser [a]
 manyAccum f (Parser p) = Parser
-  $ \s0 s _e0 e pos bs -> do
+  $ \s0 s _e0 e pos inp -> do
     let manyFailed pos' _ _ =
           e (failed "'many' applied to a parser that accepts an empty string") pos'
         walk xs x err pos' = p
@@ -92,8 +93,8 @@ manyAccum f (Parser p) = Parser
           (\err' -> s (f x xs) (err <> err') pos')
           e
           pos'
-          bs
-    p (manyFailed pos) (walk []) (s0 []) e pos bs
+          inp
+    p (manyFailed pos) (walk []) (s0 []) e pos inp
 
 instance Parsing Parser where
   try (Parser p) = Parser
@@ -106,12 +107,13 @@ instance Parsing Parser where
       (e0 . addExpected)
       e
     where
-      addExpected e = e { errorExpected = Set.insert expected $ errorExpected e }
+      expectedText = Text.pack expected
+      addExpected e = e { errorExpected = Set.insert expectedText $ errorExpected e }
 
   skipMany p = () <$ manyAccum (\_ _ -> []) p
 
   unexpected s = Parser
-    $ \_s0 _s e0 _e _pos _bs -> e0 $ failed $ "unexpected " ++ s
+    $ \_s0 _s e0 _e _pos _inp -> e0 $ failed $ "unexpected " <> Text.pack s
 
   eof = notFollowedBy anyChar <?> "end of input"
 
@@ -119,11 +121,14 @@ instance Parsing Parser where
 
 instance CharParsing Parser where
   satisfy f = Parser
-    $ \_s0 s e0 _e pos bs -> case UTF8.decode $ BS.drop (bytes pos) bs of
-      Nothing -> e0 $ failed "Unexpected EOF"
-      Just (c, delta)
-        | f c -> s c mempty $ next c delta pos
-        | otherwise -> e0 mempty
+    $ \_s0 s e0 _e pos inp ->
+      if Text.length inp > 0 then
+        case Unsafe.iter inp $ codePoints pos of
+          Unsafe.Iter c delta
+            | f c -> s c mempty $ next c delta pos
+            | otherwise -> e0 mempty
+      else
+        e0 $ failed "Unexpected EOF"
 
 instance TokenParsing Parser
 
@@ -133,7 +138,7 @@ instance LookAheadParsing Parser where
 
 withRecovery :: Parser a -> (ErrorInfo -> Parser a) -> Parser a
 withRecovery (Parser p) recover = Parser
-  $ \s0 s e0 e pos bs -> p
+  $ \s0 s e0 e pos inp -> p
     s0
     s
     e0
@@ -143,23 +148,26 @@ withRecovery (Parser p) recover = Parser
       (\err' -> e (err <> err') pos')
       e
       pos'
-      bs)
+      inp)
     pos
-    bs
+    inp
 
 position :: Parser Position
-position = Parser $ \s0 _s _e0 _e pos _bs -> s0 pos mempty
+position = Parser $ \s0 _s _e0 _e pos _inp -> s0 pos mempty
 
-input :: Parser ByteString
-input = Parser $ \s0 _s _e0 _e _pos bs -> s0 bs mempty
+input :: Parser Text
+input = Parser $ \s0 _s _e0 _e _pos inp -> s0 inp mempty
 
-slicedWith :: (a -> ByteString -> b) -> Parser a -> Parser b
+slicedWith :: (a -> Text -> b) -> Parser a -> Parser b
 slicedWith f p = do
   i <- position
   a <- p
   j <- position
-  bs <- input
-  return $ f a $ BS.take (bytes j - bytes i) $ BS.drop (bytes i) bs
+  inp <- input
+  return
+    $ f a
+    $ Unsafe.takeWord16 (codePoints j - codePoints i)
+    $ Unsafe.dropWord16 (codePoints i) inp
 
 parseFromFile :: MonadIO m => Parser a -> String -> m (Maybe a)
 parseFromFile p file = do
@@ -167,29 +175,29 @@ parseFromFile p file = do
   case result of
    Success a  -> return $ Just a
    Failure xs -> do
-     liftIO $ forM_ xs $ putStrLn . showError
+     liftIO $ forM_ xs $ Text.putStrLn . showError
      return Nothing
 
 parseFromFileEx :: MonadIO m => Parser a -> FilePath -> m (Result a)
 parseFromFileEx p file = do
-  s <- liftIO $ BS.readFile file
-  return $ parseByteString p s $ Just file
+  s <- liftIO $ Text.readFile file
+  return $ parseText p s $ Just file
 
 -- | @parseByteString p i mfile@ runs a parser @p@ on @i@. @mfile@ is used
 -- for reporting errors.
-parseByteString :: Parser a -> UTF8.ByteString -> Maybe FilePath -> Result a
-parseByteString (Parser p) bs mfile = p
+parseText :: Parser a -> Text -> Maybe FilePath -> Result a
+parseText (Parser p) inp mfile = p
   (\res _ -> Success res)
   (\res _ _pos -> Success res)
-  (\err -> Failure $ pure $ Error err start bs mfile)
-  (\err pos -> Failure $ pure $ Error err pos bs mfile)
+  (\err -> Failure $ pure $ Error err start inp mfile)
+  (\err pos -> Failure $ pure $ Error err pos inp mfile)
   start
-  bs
+  inp
 
 parseString :: Parser a -> String -> Maybe FilePath -> Result a
-parseString p s = parseByteString p $ UTF8.fromString s
+parseString p s = parseText p $ Text.pack s
 
 parseTest :: (MonadIO m, Show a) => Parser a -> String -> m ()
-parseTest p s = case parseByteString p (UTF8.fromString s) Nothing of
-  Failure xs -> liftIO $ forM_ xs $ putStrLn . showError
+parseTest p s = case parseText p (Text.pack s) Nothing of
+  Failure xs -> liftIO $ forM_ xs $ Text.putStrLn . showError
   Success a  -> liftIO $ print a
