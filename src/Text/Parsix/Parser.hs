@@ -148,23 +148,23 @@ parseFromFile p file = do
 parseFromFileEx :: MonadIO m => Parser a -> FilePath -> m (Result a)
 parseFromFileEx p file = do
   s <- liftIO $ Text.readFile file
-  return $ parseText p s $ Just file
+  return $ parseText p s file
 
--- | @parseText p i mfile@ runs a parser @p@ on @i@. @mfile@ is used for
+-- | @parseText p i file@ runs a parser @p@ on @i@. @file@ is only used for
 -- reporting errors.
-parseText :: Parser a -> Text -> Maybe FilePath -> Result a
-parseText (Parser p) inp mfile = p
+parseText :: Parser a -> Text -> FilePath -> Result a
+parseText (Parser p) inp file = p
   (\res _ -> Success res)
   (\res _ _pos -> Success res)
-  (\err -> Failure $ pure $ Error err start inp mfile)
-  (\err pos -> Failure $ pure $ Error err pos inp mfile)
+  (\err -> Failure $ pure $ Error err start inp file)
+  (\err pos -> Failure $ pure $ Error err pos inp file)
   start
   inp
 
-parseString :: Parser a -> String -> Maybe FilePath -> Result a
+parseString :: Parser a -> String -> FilePath -> Result a
 parseString p s = parseText p $ Text.pack s
 
 parseTest :: (MonadIO m, Show a) => Parser a -> String -> m ()
-parseTest p s = case parseText p (Text.pack s) Nothing of
+parseTest p s = case parseText p (Text.pack s) "<interactive>" of
   Failure xs -> liftIO $ forM_ xs $ Text.putStrLn . showError
   Success a  -> liftIO $ print a

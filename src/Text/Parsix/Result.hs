@@ -38,7 +38,7 @@ data Result a
   | Failure [Error]
   deriving (Eq, Ord, Show, Functor, Foldable, Traversable)
 
-data Error = Error !ErrorInfo !Position !Text !(Maybe FilePath)
+data Error = Error !ErrorInfo !Position !Text FilePath
   deriving (Eq, Ord, Show)
 
 instance Applicative Result where
@@ -57,12 +57,11 @@ instance Alternative Result where
   _ <|> s@Success {} = s
 
 showError :: Error -> Text
-showError (Error info pos bs mfile)
-  = maybe "(interactive)" Text.pack mfile
-  <> ":" <> shower (visualRow pos + 1)
-  <> ":" <> shower (visualColumn pos + 1)
-  <> ": " <> showErrorInfo info
-  <> "\n"
+showError (Error info pos bs file)
+  = (if null file then "" else Text.pack file <> ":")
+  <> shower (visualRow pos + 1) <> ":"
+  <> shower (visualColumn pos + 1) <> ": "
+  <> showErrorInfo info <> "\n"
   <> showPosition pos bs
     where
       shower = Text.pack . show
