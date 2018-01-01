@@ -160,6 +160,8 @@ parseText (Parser p) inp file = p
   (\err pos -> Failure $ pure $ Error err pos inp file)
   start
   inp
+  where
+    start = Position 0 0 0
 
 parseString :: Parser a -> String -> FilePath -> Result a
 parseString p s = parseText p $ Text.pack s

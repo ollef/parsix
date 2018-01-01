@@ -11,9 +11,6 @@ data Position = Position
   , visualColumn :: !Int
   } deriving (Eq, Ord, Show)
 
-start :: Position
-start = Position 0 0 0
-
 next :: Char -> Int -> Position -> Position
 next !c !delta !pos = Position
   { codePoints = codePoints pos + delta
