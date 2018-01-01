@@ -33,5 +33,9 @@ positionRow pos bs = rows bs !! visualRow pos
 
 showPosition :: Position -> Text -> Text
 showPosition pos inp
-  = positionRow pos inp <> "\n"
-  <> Text.replicate (visualColumn pos) " " <> "^"
+  = rowStringPadding <> "|\n"
+  <> rowString <> "| " <> positionRow pos inp <> "\n"
+  <> rowStringPadding <> "| " <> Text.replicate (visualColumn pos) " " <> "^"
+  where
+    rowString = Text.pack (show $ visualRow pos + 1) <> " "
+    rowStringPadding = Text.replicate (Text.length rowString) " "
