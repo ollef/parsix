@@ -84,12 +84,12 @@ instance (SliceParsing m, MonadPlus m) => SliceParsing (ReaderT e m) where
 instance (SliceParsing m, MonadPlus m, Monoid w) => SliceParsing (Strict.WriterT w m) where
   slicedWith f (Strict.WriterT m)
     = Strict.WriterT
-    $ slicedWith (\(a,s') b -> (f a b, s')) m
+    $ slicedWith (\(a, s') b -> (f a b, s')) m
 
 instance (SliceParsing m, MonadPlus m, Monoid w) => SliceParsing (Lazy.WriterT w m) where
   slicedWith f (Lazy.WriterT m)
     = Lazy.WriterT
-    $ slicedWith (\(a,s') b -> (f a b, s')) m
+    $ slicedWith (\(a, s') b -> (f a b, s')) m
 
 instance (SliceParsing m, MonadPlus m, Monoid w) => SliceParsing (Lazy.RWST r w s m) where
   slicedWith f (Lazy.RWST m)
