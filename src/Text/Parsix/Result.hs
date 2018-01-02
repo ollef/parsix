@@ -2,26 +2,30 @@
 module Text.Parsix.Result where
 
 import Control.Applicative
-import Data.Text(Text)
-import qualified Data.Text as Text
 import Data.Semigroup
 import qualified Data.Set as Set
 import Data.Set(Set)
+import Data.Text(Text)
+import Data.Text.Prettyprint.Doc
+import Data.Text.Prettyprint.Doc.Render.Terminal
+import Text.Parser.Token.Highlight
 
 import Text.Parsix.Position
+import Text.Parsix.Highlight
 
 data ErrorInfo = ErrorInfo
   { errorReason :: Maybe Text
   , errorExpected :: Set Text
   } deriving (Eq, Ord, Show)
 
-showErrorInfo :: ErrorInfo -> Text
-showErrorInfo (ErrorInfo Nothing expected)
-  | Set.null expected = ""
-  | otherwise = "expected: " <> Text.intercalate ", " (Set.toList expected)
-showErrorInfo (ErrorInfo (Just reason) expected)
-  | Set.null expected = reason
-  | otherwise = reason <> ",\nexpected: " <> Text.intercalate ", " (Set.toList expected)
+prettyErrorInfo :: ErrorInfo -> Doc AnsiStyle
+prettyErrorInfo (ErrorInfo mreason expected)
+  = annotate (color Red) "error"
+  <> maybe mempty (\reason -> colon <+> pretty reason) mreason
+  <> if Set.null expected
+    then mempty
+    else maybe colon (const comma) mreason <+> "expected"
+      <> colon <+> hsep (punctuate comma $ pretty <$> Set.toList expected)
 
 failed :: Text -> ErrorInfo
 failed x = ErrorInfo (Just x) mempty
@@ -35,33 +39,16 @@ instance Semigroup ErrorInfo where
 
 data Result a
   = Success a
-  | Failure [Error]
+  | Failure Error
   deriving (Eq, Ord, Show, Functor, Foldable, Traversable)
 
-data Error = Error !ErrorInfo !Position !Text FilePath
+data Error = Error !ErrorInfo !Position !Text Highlights FilePath
   deriving (Eq, Ord, Show)
 
-instance Applicative Result where
-  pure = Success
-
-  Success f <*> Success a = Success $ f a
-  Success {} <*> Failure e = Failure e
-  Failure e <*> Success {} = Failure e
-  Failure e <*> Failure e' = Failure (e <> e')
-
-instance Alternative Result where
-  empty = Failure mempty
-
-  Failure xs <|> Failure ys = Failure $ xs <> ys
-  s@Success {} <|> _ = s
-  _ <|> s@Success {} = s
-
-showError :: Error -> Text
-showError (Error info pos bs file)
-  = (if null file then "" else Text.pack file <> ":")
-  <> shower (visualRow pos + 1) <> ":"
-  <> shower (visualColumn pos + 1) <> ": "
-  <> showErrorInfo info <> "\n"
-  <> showPosition pos bs
-    where
-      shower = Text.pack . show
+prettyError :: (Highlight -> AnsiStyle) -> Error -> Doc AnsiStyle
+prettyError style (Error info pos inp hl file)
+  = (if null file then "" else pretty file <> ":")
+  <> pretty (visualRow pos + 1) <> ":"
+  <> pretty (visualColumn pos + 1) <> ": "
+  <> prettyErrorInfo info <> line
+  <> prettyPosition style pos inp hl

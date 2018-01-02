@@ -40,9 +40,9 @@ instance SliceParsing Parser where
       $ Unsafe.dropWord16 (codePoints i) inp
     where
       input :: Parser Text
-      input = Parser $ \s0 _s _e0 _e _pos inp -> s0 inp mempty
+      input = Parser $ \s0 _s _e0 _e _pos _hl inp -> s0 inp mempty
 
-  position = Parser $ \s0 _s _e0 _e pos _inp -> s0 pos mempty
+  position = Parser $ \s0 _s _e0 _e pos _hl _inp -> s0 pos mempty
 
 sliced :: SliceParsing m => m a -> m Text
 sliced = slicedWith (\_ t -> t)
@@ -52,19 +52,27 @@ class Parsing m => RecoveryParsing m where
 
 instance RecoveryParsing Parser where
   withRecovery (Parser p) recover = Parser
-    $ \s0 s e0 e pos inp -> p
+    $ \s0 s e0 e pos hl inp -> p
       s0
       s
       e0
-      (\err pos' -> unParser (recover err)
-        (\a err' -> s a (err <> err') pos')
+      (\err pos' hl' -> unParser (recover err)
+        (\a err' -> s a (err <> err') pos' hl')
         s
-        (\err' -> e (err <> err') pos')
+        (\err' -> e (err <> err') pos' hl')
         e
         pos'
+        hl'
         inp)
       pos
+      hl
       inp
+
+careted :: (SliceParsing m, Applicative m) => m a -> m (Position, a)
+careted m = (,) <$> position <*> m
+
+spanned :: (SliceParsing m, Applicative m) => m a -> m (Span, a)
+spanned m = (\start a end -> (Span start end, a)) <$> position <*> m <*> position
 
 -------------------------------------------------------------------------------
 -- Boilerplate instances

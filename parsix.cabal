@@ -16,14 +16,19 @@ cabal-version:       >=1.10
 library
   hs-source-dirs:      src
   exposed-modules:     Text.Parsix
-                       Text.Parsix.Parser,
                        Text.Parsix.Combinators,
+                       Text.Parsix.Highlight,
+                       Text.Parsix.Parser,
                        Text.Parsix.Position,
                        Text.Parsix.Result
   build-depends:       base >= 4.7 && < 5,
                        bytestring,
                        containers,
+                       fingertree,
+                       mtl,
                        parsers,
+                       prettyprinter,
+                       prettyprinter-ansi-terminal,
                        text,
                        transformers
   default-language:    Haskell2010
