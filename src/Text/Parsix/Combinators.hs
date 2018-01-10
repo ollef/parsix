@@ -16,6 +16,7 @@ import Data.Text(Text)
 import qualified Data.Text.Unsafe as Unsafe
 import Text.Parser.Combinators
 
+import Text.Parsix.Highlight
 import Text.Parsix.Parser
 import Text.Parsix.Position
 import Text.Parsix.Result
@@ -38,9 +39,6 @@ instance SliceParsing Parser where
       $ f a
       $ Unsafe.takeWord16 (codePoints j - codePoints i)
       $ Unsafe.dropWord16 (codePoints i) inp
-    where
-      input :: Parser Text
-      input = Parser $ \s0 _s _e0 _e _pos _hl inp -> s0 inp mempty
 
   position = Parser $ \s0 _s _e0 _e pos _hl _inp -> s0 pos mempty
 
@@ -73,6 +71,14 @@ careted m = (,) <$> position <*> m
 
 spanned :: (SliceParsing m, Applicative m) => m a -> m (Span, a)
 spanned m = (\start a end -> (Span start end, a)) <$> position <*> m <*> position
+
+-------------------------------------------------------------------------------
+-- * Low-level queries
+input :: Parser Text
+input = Parser $ \s0 _s _e0 _e _pos _hl inp -> s0 inp mempty
+
+highlights :: Parser Highlights
+highlights = Parser $ \s0 _s _e0 _e _pos hl _inp -> s0 hl mempty
 
 -------------------------------------------------------------------------------
 -- Boilerplate instances
