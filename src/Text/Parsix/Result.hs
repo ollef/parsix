@@ -14,18 +14,19 @@ import Text.Parsix.Position
 import Text.Parsix.Highlight
 
 data ErrorInfo = ErrorInfo
-  { errorReason :: Maybe Text
-  , errorExpected :: Set Text
+  { errorInfoReason :: Maybe Text
+  , errorInfoExpected :: Set Text
   } deriving (Eq, Ord, Show)
 
 prettyErrorInfo :: ErrorInfo -> Doc AnsiStyle
-prettyErrorInfo (ErrorInfo mreason expected)
-  = annotate (color Red) "error"
-  <> maybe mempty (\reason -> colon <+> pretty reason) mreason
-  <> if Set.null expected
-    then mempty
-    else maybe colon (const comma) mreason <+> "expected"
-      <> colon <+> hsep (punctuate comma $ pretty <$> Set.toList expected)
+prettyErrorInfo (ErrorInfo (Just reason) expected)
+  | Set.null expected = pretty reason
+  | otherwise = pretty reason <> colon <+> "expected" <> colon
+    <+> hsep (punctuate comma $ pretty <$> Set.toList expected)
+prettyErrorInfo (ErrorInfo Nothing expected)
+  | Set.null expected = mempty
+  | otherwise = "expected" <> colon
+    <+> hsep (punctuate comma $ pretty <$> Set.toList expected)
 
 failed :: Text -> ErrorInfo
 failed x = ErrorInfo (Just x) mempty
@@ -42,13 +43,27 @@ data Result a
   | Failure Error
   deriving (Eq, Ord, Show, Functor, Foldable, Traversable)
 
-data Error = Error !ErrorInfo !Position !Text Highlights FilePath
-  deriving (Eq, Ord, Show)
+data Error = Error
+  { errorInfo :: !ErrorInfo
+  , errorPosition :: !Position
+  , errorSourceText :: !Text
+  , errorHighlights :: Highlights
+  , errorFilePath :: FilePath
+  } deriving (Eq, Ord, Show)
 
-prettyError :: (Highlight -> AnsiStyle) -> Error -> Doc AnsiStyle
-prettyError style (Error info pos inp hl file)
+errorReason :: Error -> Maybe Text
+errorReason = errorInfoReason . errorInfo
+
+errorExpected :: Error -> Set Text
+errorExpected = errorInfoExpected . errorInfo
+
+prettyError :: Error -> Doc AnsiStyle
+prettyError = prettyErrorWithStyle defaultStyle
+
+prettyErrorWithStyle :: (Highlight -> AnsiStyle) -> Error -> Doc AnsiStyle
+prettyErrorWithStyle style (Error info pos inp hl file)
   = (if null file then "" else pretty file <> ":")
-  <> pretty (visualRow pos + 1) <> ":"
-  <> pretty (visualColumn pos + 1) <> ": "
-  <> prettyErrorInfo info <> line
+  <> pretty (visualRow pos + 1) <> colon
+  <> pretty (visualColumn pos + 1) <> colon <> line
+  <> annotate (color Red) "error" <> colon <+> prettyErrorInfo info <> line
   <> prettyPosition style pos inp hl

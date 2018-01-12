@@ -119,7 +119,7 @@ instance Parsing Parser where
       e
     where
       expectedText = Text.pack expected
-      addExpected e = e { errorExpected = Set.insert expectedText $ errorExpected e }
+      addExpected e = e { errorInfoExpected = Set.insert expectedText $ errorInfoExpected e }
 
   skipMany p = () <$ manyAccum (\_ _ -> []) p
 
@@ -162,7 +162,7 @@ parseFromFile p file = do
   case result of
    Success a -> return $ Just a
    Failure e -> do
-     liftIO $ putDoc $ prettyError defaultStyle e <> line
+     liftIO $ putDoc $ prettyError e <> line
      return Nothing
 
 parseFromFileEx :: MonadIO m => Parser a -> FilePath -> m (Result a)
@@ -189,5 +189,5 @@ parseString p s = parseText p $ Text.pack s
 
 parseTest :: (MonadIO m, Show a) => Parser a -> String -> m ()
 parseTest p s = case parseText p (Text.pack s) "<interactive>" of
-  Failure e -> liftIO $ putDoc $ prettyError defaultStyle e <> line
+  Failure e -> liftIO $ putDoc $ prettyError e <> line
   Success a -> liftIO $ print a
