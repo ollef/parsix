@@ -113,13 +113,13 @@ instance Parsing Parser where
 
   Parser p <?> expected = Parser
     $ \s0 s e0 e -> p
-      (\a -> s0 a . addExpected)
+      (\a -> s0 a . setExpected)
       s
-      (e0 . addExpected)
+      (e0 . setExpected)
       e
     where
       expectedText = Text.pack expected
-      addExpected e = e { errorInfoExpected = Set.insert expectedText $ errorInfoExpected e }
+      setExpected e = e { errorInfoExpected = Set.singleton expectedText }
 
   skipMany p = () <$ manyAccum (\_ _ -> []) p
 
