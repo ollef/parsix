@@ -11,7 +11,6 @@ import Control.Monad.Trans.State.Lazy as Lazy
 import Control.Monad.Trans.State.Strict as Strict
 import Control.Monad.Trans.Writer.Lazy as Lazy
 import Control.Monad.Trans.Writer.Strict as Strict
-import Data.Monoid
 import Data.Text(Text)
 import qualified Data.Text.Unsafe as Unsafe
 import Text.Parser.Combinators
@@ -46,19 +45,26 @@ sliced :: SliceParsing m => m a -> m Text
 sliced = slicedWith (\_ t -> t)
 
 class Parsing m => RecoveryParsing m where
-  withRecovery :: m a -> (ErrorInfo -> m a) -> m a
+  withRecovery :: (ErrorInfo -> m a) -> m a -> m a
 
 instance RecoveryParsing Parser where
-  withRecovery (Parser p) recover = Parser
+  withRecovery recover (Parser p) = Parser
     $ \s0 s e0 e pos hl inp -> p
       s0
       s
-      e0
-      (\err pos' hl' -> unParser (recover err)
-        (\a err' -> s a (err <> err') pos' hl')
+      (\err -> unParser (recover err)
+        (\a _err' -> s0 a err)
         s
-        (\err' -> e (err <> err') pos' hl')
-        e
+        (\_err' -> e0 err)
+        (\_err' _pos' _hl' -> e0 err)
+        pos
+        hl
+        inp)
+      (\err pos' hl' -> unParser (recover err)
+        (\a _err' -> s a err pos' hl')
+        s
+        (\_err' -> e err pos' hl')
+        (\_err' _pos'' _hl'' -> e err pos' hl')
         pos'
         hl'
         inp)
@@ -119,41 +125,41 @@ instance (SliceParsing m, MonadPlus m) => SliceParsing (IdentityT m) where
   slicedWith f (IdentityT m) = IdentityT $ slicedWith f m
 
 instance (RecoveryParsing m, MonadPlus m) => RecoveryParsing (Lazy.StateT s m) where
-  withRecovery (Lazy.StateT m) r
+  withRecovery r (Lazy.StateT m)
     = Lazy.StateT
-    $ \s -> m s `withRecovery` \err -> Lazy.runStateT (r err) s
+    $ \s -> withRecovery (\err -> Lazy.runStateT (r err) s) (m s)
 
 instance (RecoveryParsing m, MonadPlus m) => RecoveryParsing (Strict.StateT s m) where
-  withRecovery (Strict.StateT m) r
+  withRecovery r (Strict.StateT m)
     = Strict.StateT
-    $ \s -> m s `withRecovery` \err -> Strict.runStateT (r err) s
+    $ \s -> withRecovery (\err -> Strict.runStateT (r err) s) (m s)
 
 instance (RecoveryParsing m, MonadPlus m) => RecoveryParsing (ReaderT e m) where
-  withRecovery (ReaderT m) r
+  withRecovery r (ReaderT m)
     = ReaderT
-    $ \s -> m s `withRecovery` \err -> runReaderT (r err) s
+    $ \s -> withRecovery (\err -> runReaderT (r err) s) (m s)
 
 instance (RecoveryParsing m, MonadPlus m, Monoid w) => RecoveryParsing (Strict.WriterT w m) where
-  withRecovery (Strict.WriterT m) r
+  withRecovery r (Strict.WriterT m)
     = Strict.WriterT
-    $ m `withRecovery` (Strict.runWriterT . r)
+    $ withRecovery (Strict.runWriterT . r) m
 
 instance (RecoveryParsing m, MonadPlus m, Monoid w) => RecoveryParsing (Lazy.WriterT w m) where
-  withRecovery (Lazy.WriterT m) r
+  withRecovery r (Lazy.WriterT m)
     = Lazy.WriterT
-    $ m `withRecovery` (Lazy.runWriterT . r)
+    $ withRecovery (Lazy.runWriterT . r) m
 
 instance (RecoveryParsing m, MonadPlus m, Monoid w) => RecoveryParsing (Lazy.RWST r w s m) where
-  withRecovery (Lazy.RWST m) r
+  withRecovery r (Lazy.RWST m)
     = Lazy.RWST
-    $ \s s' -> m s s' `withRecovery` \err -> Lazy.runRWST (r err) s s'
+    $ \s s' -> withRecovery (\err -> Lazy.runRWST (r err) s s') (m s s')
 
 instance (RecoveryParsing m, MonadPlus m, Monoid w) => RecoveryParsing (Strict.RWST r w s m) where
-  withRecovery (Strict.RWST m) r
+  withRecovery r (Strict.RWST m)
     = Strict.RWST
-    $ \s s' -> m s s' `withRecovery` \err -> Strict.runRWST (r err) s s'
+    $ \s s' -> withRecovery (\err -> Strict.runRWST (r err) s s') (m s s')
 
 instance (RecoveryParsing m, MonadPlus m) => RecoveryParsing (IdentityT m) where
-  withRecovery (IdentityT m) r
+  withRecovery r (IdentityT m)
     = IdentityT
-    $ m `withRecovery` (runIdentityT . r)
+    $ withRecovery (runIdentityT . r) m
