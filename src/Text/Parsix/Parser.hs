@@ -36,6 +36,13 @@ newtype Parser a = Parser
     -> r
   }
 
+instance Semigroup a => Semigroup (Parser a) where
+  (<>) = liftA2 (<>)
+
+instance Monoid a => Monoid (Parser a) where
+  mempty = pure mempty
+  mappend = liftA2 mappend
+
 instance Functor Parser where
   fmap f (Parser p) = Parser $ \s0 s e0 e -> p (s0 . f) (s . f) e0 e
 
