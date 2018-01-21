@@ -2,7 +2,7 @@ name:                parsix
 version:             0.1.0.0
 -- synopsis:
 -- description:
-homepage:            https://github.com/githubuser/parsix#readme
+homepage:            https://github.com/ollef/parsix
 license:             BSD3
 license-file:        LICENSE
 author:              Olle Fredriksson
@@ -12,6 +12,10 @@ category:            Parsing
 build-type:          Simple
 extra-source-files:  README.md
 cabal-version:       >=1.10
+
+source-repository head
+  type:     git
+  location: https://github.com/ollef/parsix
 
 library
   hs-source-dirs:      src
