@@ -1,3 +1,4 @@
+{-# LANGUAGE BangPatterns #-}
 module Util
   ( module Control.Applicative
   , module Control.Monad
@@ -38,5 +39,5 @@ atPosition :: Int -> Error -> Bool
 atPosition pos err = go pos 0 == codePoints (errorPosition err)
   where
     inp = errorSourceText err
-    go 0 cp = cp
-    go n cp = go (n - 1) $ cp + Unsafe.iter_ inp cp
+    go 0 !cp = cp
+    go n !cp = go (n - 1) $ cp + Unsafe.iter_ inp cp
