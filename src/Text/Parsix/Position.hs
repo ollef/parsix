@@ -12,14 +12,14 @@ import Text.Parser.Token.Highlight
 import Text.Parsix.Highlight
 
 data Position = Position
-  { codePoints :: !Int
+  { codeUnits :: !Int
   , visualRow :: !Int
   , visualColumn :: !Int
   } deriving (Eq, Ord, Show)
 
 next :: Char -> Int -> Position -> Position
 next !c !delta !pos = Position
-  { codePoints = codePoints pos + delta
+  { codeUnits = codeUnits pos + delta
   , visualRow = row'
   , visualColumn = col'
   }
@@ -35,16 +35,16 @@ positionRow :: Position -> Text -> Highlights -> Doc Highlight
 positionRow pos inp
   = prettyInterval
     inp
-    (prevNewline inp $ codePoints pos)
-    (nextNewline inp $ codePoints pos)
+    (prevNewline inp $ codeUnits pos)
+    (nextNewline inp $ codeUnits pos)
 
 positionPadding :: Position -> Text -> Text
 positionPadding pos inp
   = Text.map go
-  $ codePointSlice start end inp
+  $ codeUnitSlice start end inp
   where
     start = prevNewline inp end
-    end = codePoints pos
+    end = codeUnits pos
     go '\t' = '\t'
     go _ = ' '
 

@@ -36,7 +36,7 @@ failure :: (Error -> Bool) -> Result a -> Bool
 failure f = result f $ const False
 
 atPosition :: Int -> Error -> Bool
-atPosition pos err = go pos 0 == codePoints (errorPosition err)
+atPosition pos err = go pos 0 == codeUnits (errorPosition err)
   where
     inp = errorSourceText err
     go 0 !cp = cp

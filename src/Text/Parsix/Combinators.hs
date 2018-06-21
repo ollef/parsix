@@ -36,8 +36,8 @@ instance SliceParsing Parser where
     inp <- input
     return
       $ f a
-      $ Unsafe.takeWord16 (codePoints j - codePoints i)
-      $ Unsafe.dropWord16 (codePoints i) inp
+      $ Unsafe.takeWord16 (codeUnits j - codeUnits i)
+      $ Unsafe.dropWord16 (codeUnits i) inp
 
   position = Parser $ \s0 _s _e0 _e pos _hl _inp -> s0 pos mempty
 

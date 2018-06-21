@@ -140,8 +140,8 @@ instance Parsing Parser where
 instance CharParsing Parser where
   satisfy f = Parser
     $ \_s0 s e0 _e pos hl inp ->
-      if codePoints pos < Unsafe.lengthWord16 inp then
-        case Unsafe.iter inp $ codePoints pos of
+      if codeUnits pos < Unsafe.lengthWord16 inp then
+        case Unsafe.iter inp $ codeUnits pos of
           Unsafe.Iter c delta
             | f c -> s c mempty (next c delta pos) hl
             | otherwise -> e0 mempty
@@ -157,7 +157,7 @@ instance TokenParsing Parser where
       (\err pos' -> e err pos' . ins pos pos')
       pos
     where
-      ins pos pos' = IntervalMap.insert (rightOpen (codePoints pos) (codePoints pos')) h
+      ins pos pos' = IntervalMap.insert (rightOpen (codeUnits pos) (codeUnits pos')) h
 
 instance LookAheadParsing Parser where
   lookAhead (Parser p) = Parser

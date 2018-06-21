@@ -20,8 +20,8 @@ rightOpen !start !end = IntervalMap.Interval start $! end - 1
 rightOpenView :: IntervalMap.Interval Int -> (Int, Int)
 rightOpenView (IntervalMap.Interval !start !end) = (,) start $! end + 1
 
-codePointSlice :: Int -> Int -> Text -> Text
-codePointSlice start end text
+codeUnitSlice :: Int -> Int -> Text -> Text
+codeUnitSlice start end text
   = Unsafe.takeWord16 (end' - start')
   $ Unsafe.dropWord16 start' text
   where
@@ -53,7 +53,7 @@ highlightInterval textPart highlightPart input start end highlights = go start b
     part s e
       = foldr
         highlightPart
-        (textPart $ codePointSlice s e input)
+        (textPart $ codeUnitSlice s e input)
         (snd <$> IntervalMap.dominators (rightOpen s e) highlights)
 
     go s [] = part s end
