@@ -1,4 +1,4 @@
-# parsix
+# parsix [![Build Status](https://travis-ci.org/ollef/parsix.svg?branch=master)](https://travis-ci.org/ollef/parsix)
 
 Adventures in parser combinators.
 
