@@ -1,5 +1,5 @@
 name:                parsix
-version:             0.1.0.0
+version:             0.1.0.1
 synopsis:            Parser combinators with slicing, error recovery, and syntax highlighting
 description:         A parser combinator library based on 'parsers' (like 'trifecta') with slicing, error recovery, and syntax highlighted diagnostics
 homepage:            https://github.com/ollef/parsix

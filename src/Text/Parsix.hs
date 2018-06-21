@@ -1,10 +1,19 @@
-module Text.Parsix(module X) where
+module Text.Parsix
+  ( module Text.Parser.Char
+  , module Text.Parser.Combinators
+  , module Text.Parser.Token
 
-import Text.Parser.Char as X
-import Text.Parser.Combinators as X
-import Text.Parser.Token as X
+  , module Text.Parsix.Parser
+  , module Text.Parsix.Result
+  , module Text.Parsix.Combinators
+  , module Text.Parsix.Position
+) where
 
-import Text.Parsix.Combinators as X
-import Text.Parsix.Parser as X
-import Text.Parsix.Position as X
-import Text.Parsix.Result as X
+import Text.Parser.Char
+import Text.Parser.Combinators
+import Text.Parser.Token
+
+import Text.Parsix.Combinators
+import Text.Parsix.Parser
+import Text.Parsix.Position
+import Text.Parsix.Result
