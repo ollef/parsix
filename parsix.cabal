@@ -41,6 +41,7 @@ library
                        transformers
   default-language:    Haskell2010
   ghc-options:         -Wall
+                       -Wcompat
                        -funbox-strict-fields
 
 test-suite tests
@@ -49,6 +50,7 @@ test-suite tests
   main-is:             Main.hs
   default-language:    Haskell2010
   ghc-options:         -Wall
+                       -Wcompat
   build-depends:       base,
                        QuickCheck,
                        parsix,
