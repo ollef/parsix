@@ -1,4 +1,5 @@
-# parsix [![Build Status](https://travis-ci.org/ollef/parsix.svg?branch=master)](https://travis-ci.org/ollef/parsix)
+# parsix [![Build Status](https://travis-ci.org/ollef/parsix.svg?branch=master)](https://travis-ci.org/ollef/parsix) [![Hackage](https://img.shields.io/hackage/v/parsix.svg)](https://hackage.haskell.org/package/parsix)
+
 
 Adventures in parser combinators.
 
