@@ -33,10 +33,11 @@ failed x = ErrorInfo (Just x) mempty
 
 instance Monoid ErrorInfo where
   mempty = ErrorInfo empty mempty
-  mappend (ErrorInfo r1 e1) (ErrorInfo r2 e2)
-    = ErrorInfo (r1 <|> r2) (e1 <> e2)
+  mappend = (<>)
 
 instance Semigroup ErrorInfo where
+  ErrorInfo r1 e1 <> ErrorInfo r2 e2
+    = ErrorInfo (r1 <|> r2) (e1 <> e2)
 
 data Result a
   = Success a
