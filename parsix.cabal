@@ -19,11 +19,14 @@ source-repository head
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Text.Parsix
-                       Text.Parsix.Combinators,
-                       Text.Parsix.Highlight,
-                       Text.Parsix.Parser,
-                       Text.Parsix.Position,
+  exposed-modules:
+                       Text.Parsix
+                       Text.Parsix.Combinators
+                       Text.Parsix.Highlight
+                       Text.Parsix.Internal
+                       Text.Parsix.Parser
+                       Text.Parsix.Parser.Internal
+                       Text.Parsix.Position
                        Text.Parsix.Result
   build-depends:       base >= 4.7 && < 5,
                        bytestring,

@@ -6,10 +6,10 @@ import Data.Text(Text)
 import qualified Data.Text as Text
 import Data.Text.Prettyprint.Doc
 import Data.Text.Prettyprint.Doc.Render.Terminal
-import qualified Data.Text.Unsafe as Unsafe
 import Text.Parser.Token.Highlight
 
 import Text.Parsix.Highlight
+import Text.Parsix.Internal
 
 data Position = Position
   { codeUnits :: !Int
@@ -38,38 +38,6 @@ positionRow pos inp
     (prevNewline inp $ codeUnits pos)
     (nextNewline inp $ codeUnits pos)
 
-positionPadding :: Position -> Text -> Text
-positionPadding pos inp
-  = Text.map go
-  $ codeUnitSlice start end inp
-  where
-    start = prevNewline inp end
-    end = codeUnits pos
-    go '\t' = '\t'
-    go _ = ' '
-
-nextNewline :: Text -> Int -> Int
-nextNewline inp i = go inp i'
-  where
-    i' = max 0 i
-    go text index
-      | index >= len = len
-      | otherwise = case Unsafe.iter text index of
-        Unsafe.Iter '\n' _ -> index
-        Unsafe.Iter _ delta -> nextNewline text $ index + delta
-      where
-        len = Unsafe.lengthWord16 text
-
-prevNewline :: Text -> Int -> Int
-prevNewline inp i = go inp (i' - 1) + 1
-  where
-    i' = min i $ Unsafe.lengthWord16 inp
-    go text index
-      | index < 0 = -1
-      | otherwise = case Unsafe.reverseIter text index of
-        ('\n', _) -> index
-        (_, delta) -> go text $ index + delta
-
 prettyPosition
   :: (Highlight -> AnsiStyle)
   -> Position
@@ -79,13 +47,22 @@ prettyPosition
 prettyPosition style pos inp hl
   = rowStringPadding <> bar <> line
   <> prettyRow <> bar <+> fmap style (positionRow pos inp hl) <> line
-  <> rowStringPadding <> bar <+> pretty (positionPadding pos inp) <> annotate (color Red) "^"
+  <> rowStringPadding <> bar <+> pretty positionPadding <> annotate (color Red) "^"
   where
     barHighlight = annotate (color Blue)
     bar = barHighlight "|"
     prettyRow = barHighlight $ pretty rowString
     rowString = Text.pack (show $ visualRow pos + 1) <> " "
     rowStringPadding = pretty $ Text.replicate (Text.length rowString) " "
+
+    positionPadding
+      = Text.map go
+      $ codeUnitSlice start end inp
+      where
+        start = prevNewline inp end
+        end = codeUnits pos
+        go '\t' = '\t'
+        go _ = ' '
 
 data Span = Span
   { spanStart :: !Position

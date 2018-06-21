@@ -16,7 +16,7 @@ import qualified Data.Text.Unsafe as Unsafe
 import Text.Parser.Combinators
 
 import Text.Parsix.Highlight
-import Text.Parsix.Parser
+import Text.Parsix.Parser.Internal
 import Text.Parsix.Position
 import Text.Parsix.Result
 

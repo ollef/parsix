@@ -1,4 +1,3 @@
-{-# LANGUAGE BangPatterns #-}
 module Text.Parsix.Highlight where
 
 import Data.IntervalMap.FingerTree(IntervalMap)
@@ -8,26 +7,11 @@ import Data.Semigroup
 import Data.Text(Text)
 import Data.Text.Prettyprint.Doc
 import Data.Text.Prettyprint.Doc.Render.Terminal
-import qualified Data.Text.Unsafe as Unsafe
 import Text.Parser.Token.Highlight
 
+import Text.Parsix.Internal
+
 type Highlights = IntervalMap Int Highlight
-
--- | Create a right-open interval
-rightOpen :: Int -> Int -> IntervalMap.Interval Int
-rightOpen !start !end = IntervalMap.Interval start $! end - 1
-
-rightOpenView :: IntervalMap.Interval Int -> (Int, Int)
-rightOpenView (IntervalMap.Interval !start !end) = (,) start $! end + 1
-
-codeUnitSlice :: Int -> Int -> Text -> Text
-codeUnitSlice start end text
-  = Unsafe.takeWord16 (end' - start')
-  $ Unsafe.dropWord16 start' text
-  where
-    start' = clamp start
-    end' = clamp end
-    clamp x = max 0 $ min x $ Unsafe.lengthWord16 text
 
 highlightInterval
   :: Semigroup a
