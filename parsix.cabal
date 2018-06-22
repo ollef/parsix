@@ -31,14 +31,14 @@ library
                        Text.Parsix.Position
                        Text.Parsix.Result
   build-depends:       base >= 4.7 && < 5,
-                       containers,
-                       fingertree,
-                       mtl,
-                       parsers,
-                       prettyprinter,
-                       prettyprinter-ansi-terminal,
-                       text,
-                       transformers
+                       containers >= 0.5.7,
+                       fingertree >= 0.1.3,
+                       mtl >= 2.2.1,
+                       parsers >= 0.12.7,
+                       prettyprinter >= 1.1.1,
+                       prettyprinter-ansi-terminal >= 1.1.1,
+                       text >= 1.2.2,
+                       transformers >= 0.5.2
   default-language:    Haskell2010
   ghc-options:         -Wall
                        -Wcompat

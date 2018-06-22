@@ -1,6 +1,7 @@
 # 0.1.0.2
 
 - Remove unused `bytestring` dependency
+- Add lower bounds for all dependencies
 
 # 0.1.0.1
 
