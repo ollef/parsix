@@ -1,3 +1,7 @@
+# 0.1.0.2
+
+- Remove unused `bytestring` dependency
+
 # 0.1.0.1
 
 - Change module re-export method to get Haddock to generate docs for `Text.Parsix`

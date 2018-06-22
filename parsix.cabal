@@ -31,7 +31,6 @@ library
                        Text.Parsix.Position
                        Text.Parsix.Result
   build-depends:       base >= 4.7 && < 5,
-                       bytestring,
                        containers,
                        fingertree,
                        mtl,
