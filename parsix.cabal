@@ -7,7 +7,7 @@ license:             BSD3
 license-file:        LICENSE
 author:              Olle Fredriksson
 maintainer:          fredriksson.olle@gmail.com
-copyright:           2017-2018 Olle Fredriksson
+copyright:           2017-2019 Olle Fredriksson
 category:            Parsing
 build-type:          Simple
 extra-source-files:  README.md
