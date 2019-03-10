@@ -44,27 +44,43 @@ prettyPosition
   -> Text
   -> Highlights
   -> Doc AnsiStyle
-prettyPosition style pos inp hl
-  = rowStringPadding <> bar <> line
-  <> prettyRow <> bar <+> fmap style (positionRow pos inp hl) <> line
-  <> rowStringPadding <> bar <+> pretty positionPadding <> annotate (color Red) "^"
+prettyPosition style pos = prettySpan style $ Span pos pos
+
+data Span = Span
+  { spanStart :: !Position
+  , spanEnd :: !Position
+  } deriving (Eq, Ord, Show)
+
+prettySpan
+  :: (Highlight -> AnsiStyle)
+  -> Span
+  -> Text
+  -> Highlights
+  -> Doc AnsiStyle
+prettySpan style (Span startPos endPos) inp hl
+  = rowNumberStringPadding <> bar <> line
+  <> prettyRowNumber <> bar <+> fmap style rowString <> line
+  <> rowNumberStringPadding <> bar <+> pretty positionPadding <> annotate (color Red) ("^" <> pretty (Text.replicate squiggleLength "~"))
   where
+    rowString = positionRow startPos inp hl
     barHighlight = annotate (color Blue)
     bar = barHighlight "|"
-    prettyRow = barHighlight $ pretty rowString
-    rowString = Text.pack (show $ visualRow pos + 1) <> " "
-    rowStringPadding = pretty $ Text.replicate (Text.length rowString) " "
+    prettyRowNumber = barHighlight $ pretty rowNumberString
+    rowNumberString = Text.pack (show $ visualRow startPos + 1) <> " "
+    rowNumberStringPadding = pretty $ Text.replicate (Text.length rowNumberString) " "
 
     positionPadding
       = Text.map go
       $ codeUnitSlice start end inp
       where
         start = prevNewline inp end
-        end = codeUnits pos
+        end = codeUnits startPos
         go '\t' = '\t'
         go _ = ' '
 
-data Span = Span
-  { spanStart :: !Position
-  , spanEnd :: !Position
-  } deriving (Eq, Ord, Show)
+    squiggleEnd =
+      if visualRow endPos > visualRow startPos then
+        nextNewline inp $ codeUnits startPos
+      else
+       codeUnits endPos
+    squiggleLength = squiggleEnd - codeUnits startPos - 1
