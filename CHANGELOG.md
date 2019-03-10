@@ -1,3 +1,7 @@
+# 0.1.0.3
+
+- Add `prettySpan` function
+
 # 0.1.0.2
 
 - Remove unused `bytestring` dependency

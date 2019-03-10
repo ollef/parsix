@@ -165,6 +165,21 @@ instance LookAheadParsing Parser where
   lookAhead (Parser p) = Parser
     $ \s0 s e0 e pos -> p s0 (\a _ _ -> s a mempty pos) e0 e pos
 
+runParser
+  :: Parser a
+  -> Text
+  -> FilePath
+  -> Position
+  -> Result (a, Position, Highlights)
+runParser (Parser p) inp file start = p
+  (\res _ -> Success (res, start, mempty))
+  (\res _ pos hl -> Success (res, pos, hl))
+  (\err -> Failure $ Error err start inp mempty file)
+  (\err pos hl -> Failure $ Error err pos inp hl file)
+  start
+  mempty
+  inp
+
 parseFromFile :: MonadIO m => Parser a -> FilePath -> m (Maybe a)
 parseFromFile p file = do
   result <- parseFromFileEx p file
@@ -182,16 +197,7 @@ parseFromFileEx p file = do
 -- | @parseText p i file@ runs a parser @p@ on @i@. @file@ is only used for
 -- reporting errors.
 parseText :: Parser a -> Text -> FilePath -> Result a
-parseText (Parser p) inp file = p
-  (\res _ -> Success res)
-  (\res _ _pos _hl -> Success res)
-  (\err -> Failure $ Error err start inp mempty file)
-  (\err pos hl -> Failure $ Error err pos inp hl file)
-  start
-  mempty
-  inp
-  where
-    start = Position 0 0 0
+parseText p inp file = (\(a, _, _) -> a) <$> runParser p inp file (Position 0 0 0)
 
 -- | @parseString p i file@ runs a parser @p@ on @i@. @file@ is only used for
 -- reporting errors.
