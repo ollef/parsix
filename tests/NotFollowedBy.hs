@@ -16,6 +16,6 @@ tests = testGroup "notFollowedBy"
     $ \x y -> isFailure
     $ parse (anyChar *> notFollowedBy (char y) *> char y) x
   , testProperty "4"
-    $ \x -> isSuccess
+    $ \x -> Util.isSuccess
     $ parse (notFollowedBy (char x) <|> char x *> pure ()) [x]
   ]
