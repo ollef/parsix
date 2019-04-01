@@ -1,7 +1,8 @@
-{-# LANGUAGE BangPatterns, OverloadedStrings #-}
+{-# LANGUAGE BangPatterns, DeriveGeneric, OverloadedStrings #-}
 module Text.Parsix.Position where
 
 import Data.Semigroup
+import GHC.Generics
 import Data.Text(Text)
 import qualified Data.Text as Text
 import Data.Text.Prettyprint.Doc
@@ -15,7 +16,7 @@ data Position = Position
   { codeUnits :: !Int
   , visualRow :: !Int
   , visualColumn :: !Int
-  } deriving (Eq, Ord, Show)
+  } deriving (Eq, Ord, Show, Generic)
 
 next :: Char -> Int -> Position -> Position
 next !c !delta !pos = Position
@@ -49,7 +50,7 @@ prettyPosition style pos = prettySpan style $ Span pos pos
 data Span = Span
   { spanStart :: !Position
   , spanEnd :: !Position
-  } deriving (Eq, Ord, Show)
+  } deriving (Eq, Ord, Show, Generic)
 
 prettySpan
   :: (Highlight -> AnsiStyle)
