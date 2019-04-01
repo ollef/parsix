@@ -1,3 +1,7 @@
+# 0.1.0.4
+
+- Add `Generic` instances to `Span` and `Position`
+
 # 0.1.0.3
 
 - Add `prettySpan` function
