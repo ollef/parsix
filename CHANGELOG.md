@@ -1,3 +1,7 @@
+# 0.2.0.0
+
+- Make `withRecovery` rewind before running recovery
+
 # 0.1.0.4
 
 - Add `Generic` instances to `Span` and `Position`
