@@ -18,6 +18,20 @@ data Position = Position
   , visualColumn :: !Int
   } deriving (Eq, Ord, Show, Generic)
 
+instance Semigroup Position where
+  p1 <> p2 = Position
+    { codeUnits = codeUnits p1 + codeUnits p2
+    , visualRow = visualRow p1 + visualRow p2
+    , visualColumn =
+      if visualRow p1 == 0 && visualRow p2 == 0 then
+        visualColumn p1 + visualColumn p2
+      else
+        visualColumn p2
+    }
+
+instance Monoid Position where
+  mempty = Position 0 0 0
+
 next :: Char -> Int -> Position -> Position
 next !c !delta !pos = Position
   { codeUnits = codeUnits pos + delta

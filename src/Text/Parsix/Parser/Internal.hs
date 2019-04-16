@@ -197,7 +197,7 @@ parseFromFileEx p file = do
 -- | @parseText p i file@ runs a parser @p@ on @i@. @file@ is only used for
 -- reporting errors.
 parseText :: Parser a -> Text -> FilePath -> Result a
-parseText p inp file = (\(a, _, _) -> a) <$> runParser p inp file (Position 0 0 0)
+parseText p inp file = (\(a, _, _) -> a) <$> runParser p inp file mempty
 
 -- | @parseString p i file@ runs a parser @p@ on @i@. @file@ is only used for
 -- reporting errors.
