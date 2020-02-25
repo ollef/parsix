@@ -1,3 +1,7 @@
+# 0.2.2.0
+
+- Fix bug in `lookAhead`, where lookaheads would commit the parser
+
 # 0.2.1.0
 
 - Add `Monoid` and `Semigroup` instances to `Position`

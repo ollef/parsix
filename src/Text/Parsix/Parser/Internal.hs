@@ -163,7 +163,7 @@ instance TokenParsing Parser where
 
 instance LookAheadParsing Parser where
   lookAhead (Parser p) = Parser
-    $ \s0 s e0 e pos -> p s0 (\a _ _ -> s a mempty pos) e0 e pos
+    $ \s0 _ e0 e pos -> p s0 (\a err _pos _hl -> s0 a err) e0 e pos
 
 runParser
   :: Parser a
