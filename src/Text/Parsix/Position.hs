@@ -31,6 +31,7 @@ instance Semigroup Position where
 
 instance Monoid Position where
   mempty = Position 0 0 0
+  mappend = (<>)
 
 next :: Char -> Int -> Position -> Position
 next !c !delta !pos = Position

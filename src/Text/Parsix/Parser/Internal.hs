@@ -43,9 +43,13 @@ newtype Parser a = Parser
 instance Semigroup a => Semigroup (Parser a) where
   (<>) = liftA2 (<>)
 
+#if MIN_VERSION_base(4,11,0)
 instance Monoid a => Monoid (Parser a) where
+#else
+instance (Monoid a, Semigroup a) => Monoid (Parser a) where
+#endif
   mempty = pure mempty
-  mappend = liftA2 mappend
+  mappend = (<>)
 
 instance Functor Parser where
   fmap f (Parser p) = Parser $ \s0 s e0 e -> p (s0 . f) (s . f) e0 e
