@@ -1,3 +1,7 @@
+# 0.2.2.1
+
+- Make compatible with GHC 8.8
+
 # 0.2.2.0
 
 - Fix bug in `lookAhead`, where lookaheads would commit the parser
