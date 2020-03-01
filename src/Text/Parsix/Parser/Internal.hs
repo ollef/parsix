@@ -1,10 +1,12 @@
-{-# LANGUAGE OverloadedStrings, RankNTypes #-}
+{-# LANGUAGE CPP, OverloadedStrings, RankNTypes #-}
 -- | This module exposes internals of the package: its API may change independently of the PVP-compliant version number.
 module Text.Parsix.Parser.Internal where
 
 import Control.Applicative
 import Control.Monad
+#if !MIN_VERSION_base(4,13,0)
 import Control.Monad.Fail as Fail
+#endif
 import Control.Monad.IO.Class
 import qualified Data.IntervalMap.FingerTree as IntervalMap
 import Data.Semigroup
@@ -91,7 +93,9 @@ instance Monad Parser where
       pos
       hl
       inp
+#if !MIN_VERSION_base(4,13,0)
   fail = Fail.fail
+#endif
 
 instance MonadFail Parser where
   fail x = Parser
