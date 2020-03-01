@@ -9,7 +9,9 @@ import Control.Monad.Fail as Fail
 #endif
 import Control.Monad.IO.Class
 import qualified Data.IntervalMap.FingerTree as IntervalMap
+#if !MIN_VERSION_base(4,11,0)
 import Data.Semigroup
+#endif
 import qualified Data.Set as Set
 import Data.Text(Text)
 import qualified Data.Text as Text

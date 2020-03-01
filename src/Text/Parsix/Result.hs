@@ -1,8 +1,10 @@
-{-# LANGUAGE DeriveFunctor, DeriveFoldable, DeriveTraversable, OverloadedStrings #-}
+{-# LANGUAGE CPP, DeriveFunctor, DeriveFoldable, DeriveTraversable, OverloadedStrings #-}
 module Text.Parsix.Result where
 
 import Control.Applicative
+#if !MIN_VERSION_base(4,11,0)
 import Data.Semigroup
+#endif
 import qualified Data.Set as Set
 import Data.Set(Set)
 import Data.Text(Text)

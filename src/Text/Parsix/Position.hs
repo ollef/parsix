@@ -1,7 +1,9 @@
-{-# LANGUAGE BangPatterns, DeriveGeneric, OverloadedStrings #-}
+{-# LANGUAGE BangPatterns, CPP, DeriveGeneric, OverloadedStrings #-}
 module Text.Parsix.Position where
 
+#if !MIN_VERSION_base(4,11,0)
 import Data.Semigroup
+#endif
 import GHC.Generics
 import Data.Text(Text)
 import qualified Data.Text as Text

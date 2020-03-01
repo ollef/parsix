@@ -1,9 +1,12 @@
+{-# LANGUAGE CPP #-}
 module Text.Parsix.Highlight where
 
 import Data.IntervalMap.FingerTree(IntervalMap)
 import qualified Data.IntervalMap.FingerTree as IntervalMap
 import Data.List
+#if !MIN_VERSION_base(4,11,0)
 import Data.Semigroup
+#endif
 import Data.Text(Text)
 import Data.Text.Prettyprint.Doc
 import Data.Text.Prettyprint.Doc.Render.Terminal
